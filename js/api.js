@@ -4,7 +4,7 @@
 // different domains, we call a full URL instead of a relative "/api" path.
 // Replace API_BASE below with your actual Render service URL.
 
-const API_BASE = 'https://YOUR-RENDER-SERVICE.onrender.com/api';
+const API_BASE = 'https://pashu-swasthya.onrender.com/api';
 
 async function apiRequest(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
