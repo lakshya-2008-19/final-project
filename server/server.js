@@ -1,4 +1,4 @@
-// server.js (Complete, 100% Fixed & Ready)
+// server.js (Copy-paste this entire file into GitHub)
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -76,7 +76,7 @@ function maskPhone(phone) {
   if (!phone) return null;
   const digits = String(phone).replace(/\D/g, '');
   if (digits.length < 4) return '••••';
-  return `••••••${digits.slice(-4)}`;
+  return '••••••' + digits.slice(-4);
 }
 
 app.get('/api/health', (req, res) => {
@@ -183,5 +183,5 @@ app.post('/api/animals/:tagCode/rescue', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`LUHID API listening on port ${PORT});
+  console.log('LUHID API listening on port ' + PORT);
 });
