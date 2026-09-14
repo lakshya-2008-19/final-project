@@ -25,6 +25,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-1.5-flash';
 
+// यहाँ रखें:
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY, { apiVersion: 'v1' });
+const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+
 // ---------------------------------------------------------------------------
 // Gemini helper (unchanged logic — same guardrail system prompt as before)
 // ---------------------------------------------------------------------------
