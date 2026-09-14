@@ -61,8 +61,7 @@ Preferred reply language: ${language || 'English'}
 
 Give safe pre-clinical first-aid guidance following your rules.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
+  const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
   const body = {
     system_instruction: { parts: [{ text: GUARDRAIL_SYSTEM_PROMPT }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
