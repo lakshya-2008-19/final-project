@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LUHID — Pashu Swasthya | Livestock Unique Health ID</title>
+<meta name="description" content="Offline-first livestock health tracking with QR ear tags, AI first-aid triage and a 30-second vet EHR." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="#home">
+      <span class="brand__mark">🐄</span>
+      <span class="brand__text">LUHID<span class="brand__sub">Pashu Swasthya</span></span>
+    </a>
+    <nav class="topnav">
+      <a href="#how">How it works</a>
+      <a href="#portals">Portals</a>
+      <span class="net-badge" id="netBadge">● Online</span>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="home">
+  <div class="hero__inner">
+    <div class="hero__copy">
+      <p class="eyebrowless">A unique health ID for every animal</p>
+      <h1>One ear tag.<br>Every animal's health story, always within reach.</h1>
+      <p class="hero__lede">
+        LUHID pairs a low-cost QR ear tag with an offline-first app. Farmers log
+        symptoms by voice or icon and get instant AI first-aid guidance — even with
+        no signal. Visiting vets scan the tag and see the full history in 30 seconds.
+      </p>
+      <div class="hero__ctas">
+        <button class="btn btn--primary" data-open="registerModal">Register an animal</button>
+        <button class="btn btn--ghost" data-open="vetModal">I'm a veterinarian</button>
+      </div>
+    </div>
+    <div class="hero__art" aria-hidden="true">
+      <div class="tag-card">
+        <div class="tag-card__row">
+          <span class="tag-card__qr">▦</span>
+          <div>
+            <div class="tag-card__label">LUHID TAG</div>
+            <div class="tag-card__code">LUH-7F3K9Q</div>
+          </div>
+        </div>
+        <div class="tag-card__divider"></div>
+        <div class="tag-card__meta">Cow · Gir · Ratlam, MP</div>
+        <div class="tag-card__meta tag-card__meta--muted">Scan for medical history or lost &amp; found</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="how" id="how">
+  <h2>Three roles, one tag</h2>
+  <div class="how__grid">
+    <div class="how__item">
+      <span class="how__num">Farmer</span>
+      <h3>Log symptoms in seconds</h3>
+      <p>Tap icons or speak in your language. Works with zero signal and syncs later. Get safe first-aid guidance instantly.</p>
+    </div>
+    <div class="how__item">
+      <span class="how__num">Veterinarian</span>
+      <h3>Scan for full history</h3>
+      <p>No more starting from scratch. A single scan opens the animal's complete symptom and vaccination timeline.</p>
+    </div>
+    <div class="how__item">
+      <span class="how__num">Any citizen</span>
+      <h3>Reunite lost animals</h3>
+      <p>Anyone can scan a stray or lost animal's tag to alert the owner's masked number and share a GPS pin — no personal data exposed.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PORTALS ============ -->
+<section class="portals" id="portals">
+  <h2>Open a portal</h2>
+  <div class="portals__grid">
+
+    <button class="portal-card portal-card--farmer" data-open="registerModal">
+      <span class="portal-card__icon">🌾</span>
+      <h3>Farmer</h3>
+      <p>Register an animal, get its QR tag, and log symptoms</p>
+    </button>
+
+    <button class="portal-card portal-card--vet" data-open="vetModal">
+      <span class="portal-card__icon">🩺</span>
+      <h3>Veterinarian</h3>
+      <p>Look up an animal's full 30-second medical history</p>
+    </button>
+
+    <button class="portal-card portal-card--citizen" data-open="citizenModal">
+      <span class="portal-card__icon">📍</span>
+      <h3>Found an animal?</h3>
+      <p>Alert the owner and share your location — no login needed</p>
+    </button>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>LUHID — Pashu Swasthya · Built for Smart India Hackathon 2026 · Offline-first · AI-guided · Privacy-preserving</p>
+</footer>
+
+<!-- ================= MODAL: REGISTER + FARMER SYMPTOM LOGGER ================= -->
+<div class="modal" id="registerModal" aria-hidden="true">
+  <div class="modal__panel modal__panel--wide">
+    <button class="modal__close" data-close>&times;</button>
+
+    <div class="tabs">
+      <button class="tabs__btn is-active" data-tab="tab-register">1. Register animal</button>
+      <button class="tabs__btn" data-tab="tab-log">2. Log symptoms</button>
+      <button class="tabs__btn" data-tab="tab-tag">3. Tag &amp; sync</button>
+    </div>
+
+    <!-- Step 1: Register -->
+    <div class="tab-panel is-active" id="tab-register">
+      <h2>Register a new animal</h2>
+      <form id="registerForm" class="form-grid">
+        <label>Species*
+          <select name="species" required>
+            <option value="Cow">Cow</option>
+            <option value="Buffalo">Buffalo</option>
+            <option value="Goat">Goat</option>
+            <option value="Sheep">Sheep</option>
+            <option value="Poultry">Poultry</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label>Breed
+          <input type="text" name="breed" placeholder="e.g. Gir, Murrah" />
+        </label>
+        <label>Sex
+          <select name="sex">
+            <option value="">—</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </label>
+        <label>Age (years)
+          <input type="number" step="0.5" min="0" name="ageYears" />
+        </label>
+        <label>Owner name*
+          <input type="text" name="ownerName" required />
+        </label>
+        <label>Owner phone*
+          <input type="tel" name="ownerPhone" required placeholder="10-digit mobile" />
+        </label>
+        <label>Village
+          <input type="text" name="village" />
+        </label>
+        <label>District
+          <input type="text" name="district" />
+        </label>
+        <label class="form-grid__full">Notes
+          <textarea name="notes" rows="2" placeholder="Anything else worth noting"></textarea>
+        </label>
+        <div class="form-grid__full form-actions">
+          <span class="form-status" id="registerStatus"></span>
+          <button type="submit" class="btn btn--primary">Register &amp; get QR tag</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Step 2: Log symptoms -->
+    <div class="tab-panel" id="tab-log">
+      <h2>Log symptoms</h2>
+      <p class="muted">Works offline — entries queue locally and sync automatically once you're back online.</p>
+
+      <label class="field-inline">Animal tag
+        <input type="text" id="logTagCode" placeholder="LUH-XXXXXX" />
+      </label>
+
+      <div class="icon-grid" id="symptomIcons">
+        <button type="button" class="icon-chip" data-symptom="Fever">🌡️ Fever</button>
+        <button type="button" class="icon-chip" data-symptom="Not eating">🍽️ Not eating</button>
+        <button type="button" class="icon-chip" data-symptom="Coughing">😮‍💨 Coughing</button>
+        <button type="button" class="icon-chip" data-symptom="Diarrhea">💧 Diarrhea</button>
+        <button type="button" class="icon-chip" data-symptom="Lameness / limping">🦵 Limping</button>
+        <button type="button" class="icon-chip" data-symptom="Visible wound">🩹 Wound</button>
+        <button type="button" class="icon-chip" data-symptom="Swelling">🔴 Swelling</button>
+        <button type="button" class="icon-chip" data-symptom="Lethargy / weakness">😴 Weak / low energy</button>
+      </div>
+
+      <div class="voice-row">
+        <textarea id="symptomText" rows="3" placeholder="Add details, or tap the mic to speak..."></textarea>
+        <button type="button" class="mic-btn" id="micBtn" title="Speak your symptoms">🎙️</button>
+      </div>
+
+      <div class="form-grid">
+        <label>Severity
+          <select id="logSeverity">
+            <option value="mild">Mild</option>
+            <option value="moderate">Moderate</option>
+            <option value="severe">Severe</option>
+            <option value="emergency">Emergency</option>
+          </select>
+        </label>
+        <label>Language
+          <select id="logLanguage">
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Marathi">Marathi</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Telugu">Telugu</option>
+            <option value="Punjabi">Punjabi</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <span class="form-status" id="logStatus"></span>
+        <button type="button" class="btn btn--primary" id="submitLogBtn">Get AI first-aid advice &amp; save</button>
+      </div>
+
+      <div class="advice-box" id="adviceBox" hidden>
+        <h4>AI first-aid guidance</h4>
+        <p id="adviceText"></p>
+        <p class="advice-box__disclaimer">This is not a diagnosis. For fever, bleeding, breathing trouble or symptoms lasting more than a day, contact a veterinarian immediately.</p>
+      </div>
+    </div>
+
+    <!-- Step 3: Tag & sync -->
+    <div class="tab-panel" id="tab-tag">
+      <h2>Your animal's QR tag</h2>
+      <div class="tag-result" id="tagResult">
+        <p class="muted">Register an animal first to generate its tag here.</p>
+      </div>
+      <h3 class="offline-heading">Offline queue</h3>
+      <p class="muted">Symptom logs saved while offline appear here until they sync.</p>
+      <ul class="queue-list" id="queueList"></ul>
+      <button type="button" class="btn btn--ghost" id="syncNowBtn">Sync now</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= MODAL: VET LOOKUP ================= -->
+<div class="modal" id="vetModal" aria-hidden="true">
+  <div class="modal__panel modal__panel--wide">
+    <button class="modal__close" data-close>&times;</button>
+    <h2>Veterinarian — 30-second EHR</h2>
+    <p class="muted">Scan the animal's QR tag or type the code printed on it.</p>
+
+    <div class="lookup-row">
+      <input type="text" id="vetTagInput" placeholder="LUH-XXXXXX" />
+      <button type="button" class="btn btn--primary" id="vetLookupBtn">Look up</button>
+      <button type="button" class="btn btn--ghost" id="vetScanBtn">📷 Scan QR</button>
+    </div>
+    <video id="vetScanVideo" class="scan-video" hidden playsinline></video>
+
+    <div id="vetResult" class="ehr" hidden></div>
+    <p class="form-status" id="vetStatus"></p>
+  </div>
+</div>
+
+<!-- ================= MODAL: CITIZEN / PUBLIC RESCUE ================= -->
+<div class="modal" id="citizenModal" aria-hidden="true">
+  <div class="modal__panel">
+    <button class="modal__close" data-close>&times;</button>
+    <h2>Found an animal?</h2>
+    <p class="muted">Scan or enter the tag on its ear. We'll alert the owner without sharing your details or theirs.</p>
+
+    <div class="lookup-row">
+      <input type="text" id="citizenTagInput" placeholder="LUH-XXXXXX" />
+      <button type="button" class="btn btn--primary" id="citizenLookupBtn">Find owner</button>
+      <button type="button" class="btn btn--ghost" id="citizenScanBtn">📷 Scan QR</button>
+    </div>
+    <video id="citizenScanVideo" class="scan-video" hidden playsinline></video>
+
+    <div id="citizenResult" class="citizen-card" hidden></div>
+    <p class="form-status" id="citizenStatus"></p>
+  </div>
+</div>
+
+<!-- ============ Libraries (CDN) ============ -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script src="js/api.js"></script>
+<script src="js/db-local.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

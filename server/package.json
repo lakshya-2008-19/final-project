@@ -1,0 +1,17 @@
+{
+  "name": "luhid-api",
+  "version": "1.0.0",
+  "description": "LUHID backend — Express API on Render.com, Supabase for data, Gemini for AI triage",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
