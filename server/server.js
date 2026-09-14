@@ -27,7 +27,7 @@ const GEMINI_MODEL = 'gemini-1.5-flash';
 
 // यहाँ रखें:
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY, { apiVersion: 'v1' });
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
 // ---------------------------------------------------------------------------
