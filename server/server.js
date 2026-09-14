@@ -1,8 +1,7 @@
-// server.js (Complete, Drop-in Fixed Version using official SDK)
+// server.js (Complete, 100% Fixed & Ready)
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 app.use(cors());
@@ -18,8 +17,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-1.5-flash';
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
 const GUARDRAIL_SYSTEM_PROMPT = `You are Pashu Sahayak, a pre-clinical livestock first-aid assistant used by rural farmers in India through the LUHID app. You are NOT a veterinarian and must never behave like one.
 
@@ -45,12 +42,26 @@ Preferred reply language: ${language || 'English'}
 
 Give safe pre-clinical first-aid guidance following your rules.`;
 
-  const response = await model.generateContent({
+  const url = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const body = {
+    system_instruction: { parts: [{ text: GUARDRAIL_SYSTEM_PROMPT }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-    systemInstruction: { parts: [{ text: GUARDRAIL_SYSTEM_PROMPT }] },
     generationConfig: { temperature: 0.4, maxOutputTokens: 300 }
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
   });
-  const text = response.response.text();
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Gemini API error (${res.status}): ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text).join(' ').trim();
   return text || 'Unable to generate advice right now. Please isolate the animal, keep it comfortable, and contact a veterinarian.';
 }
 
@@ -172,5 +183,5 @@ app.post('/api/animals/:tagCode/rescue', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`LUHID API listening on port ${PORT}`);
+  console.log(`LUHID API listening on port ${PORT});
 });
