@@ -66,11 +66,9 @@ registerForm.addEventListener('submit', async (e) => {
   const fd = new FormData(registerForm);
   const payload = Object.fromEntries(fd.entries());
   
-  // 🔴 NEW: Add userEmail if logged in, convert age to float, and parse species correctly
   if (payload.ageYears) payload.ageYears = parseFloat(payload.ageYears);
   if (window.currentUserEmail) payload.userEmail = window.currentUserEmail;
   
-  // Clean up species if it contains emoji (e.g., "🐄 Cow" -> "Cow")
   if (payload.species && payload.species.includes(' ')) {
       payload.species = payload.species.split(' ')[1]; 
   }
@@ -84,14 +82,12 @@ registerForm.addEventListener('submit', async (e) => {
     document.getElementById('logTagCode').value = currentTagCode;
     await renderTagResult(currentTagCode, payload);
     
-    // 🔴 NEW: Refresh the dynamic cards on the homepage right after registering
     if (window.currentUserEmail && typeof loadUserAnimals === 'function') {
         loadUserAnimals(window.currentUserEmail);
     }
     
-    // jump to the tag tab automatically
     document.querySelector('[data-tab="tab-tag"]').click();
-    registerForm.reset(); // clear form for next time
+    registerForm.reset(); 
   } catch (err) {
     registerStatus.textContent = err.message;
     registerStatus.classList.add('is-error');
@@ -125,7 +121,6 @@ document.querySelectorAll('.icon-chip').forEach((chip) => {
   });
 });
 
-// Voice input via Web Speech API
 const micBtn = document.getElementById('micBtn');
 const symptomText = document.getElementById('symptomText');
 let recognizer = null;
@@ -178,7 +173,7 @@ submitLogBtn.addEventListener('click', async () => {
   const severity = document.getElementById('logSeverity').value;
   const language = document.getElementById('logLanguage').value;
   let species = registerForm.species ? registerForm.species.value : '';
-  if (species && species.includes(' ')) species = species.split(' ')[1]; // remove emoji
+  if (species && species.includes(' ')) species = species.split(' ')[1]; 
 
   const symptomsCombined = [...selectedSymptoms, freeText].filter(Boolean).join('; ');
 
@@ -206,6 +201,12 @@ submitLogBtn.addEventListener('click', async () => {
     try {
       await Api.addLog(tagCode, logPayload);
       setStatus(logStatus, 'Saved to the animal\'s health record.');
+      
+      // 🔴 NEW FIX: Reload cards immediately after saving symptoms
+      if (window.currentUserEmail && typeof loadUserAnimals === 'function') {
+          loadUserAnimals(window.currentUserEmail);
+      }
+      
     } catch (err) {
       LocalQueue.push({ tagCode, ...logPayload });
       setStatus(logStatus, 'Could not reach the server — saved locally and will sync automatically.', true);
