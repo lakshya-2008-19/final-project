@@ -393,3 +393,41 @@ document.getElementById('citizenScanBtn').addEventListener('click', () => {
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
+// js/app.js (Breed Auto-select Logic)
+
+const breedData = {
+  "Cow": ["Gir", "Sahiwal", "Red Sindhi", "Tharparkar", "Holstein Friesian (HF)", "Jersey", "Mixed/Desi", "Other"],
+  "Buffalo": ["Murrah", "Jafarabadi", "Surti", "Mehsana", "Nili Ravi", "Mixed/Desi", "Other"],
+  "Goat": ["Jamnapari", "Beetal", "Barbari", "Black Bengal", "Sirohi", "Mixed/Desi", "Other"],
+  "Sheep": ["Marwari", "Deccani", "Nellore", "Gaddi", "Mixed/Desi", "Other"],
+  "Poultry": ["Aseel", "Kadaknath", "Leghorn", "Rhode Island Red", "Broiler", "Layer", "Other"],
+  "Other": ["Specify in notes"]
+};
+
+const speciesSelect = document.getElementById('speciesSelect');
+const breedSelect = document.getElementById('breedSelect');
+
+if (speciesSelect && breedSelect) {
+  speciesSelect.addEventListener('change', function() {
+    const selectedSpecies = this.value;
+    
+    // Clear current options
+    breedSelect.innerHTML = '';
+    
+    if (selectedSpecies && breedData[selectedSpecies]) {
+      // Add new options based on selected species
+      breedData[selectedSpecies].forEach(breed => {
+        const option = document.createElement('option');
+        option.value = breed;
+        option.textContent = breed;
+        breedSelect.appendChild(option);
+      });
+    } else {
+      // Default if nothing selected
+      const defaultOption = document.createElement('option');
+      defaultOption.value = "";
+      defaultOption.textContent = "Select species first...";
+      breedSelect.appendChild(defaultOption);
+    }
+  });
+}
