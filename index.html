@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>LUHID — Pashu Swasthya | Livestock Unique Health ID</title>
 <meta name="description" content="Offline-first livestock health tracking with QR ear tags, AI first-aid triage and a 30-second vet EHR." />
+<!-- Supabase JS Library for Login -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
@@ -22,6 +24,9 @@
       <a href="#how">How it works</a>
       <a href="#portals">Portals</a>
       <span class="net-badge" id="netBadge">● Online</span>
+      <!-- NEW: Login Button -->
+      <button class="btn btn--outline" id="navLoginBtn" data-open="loginModal" style="margin-left: 15px; padding: 6px 12px; font-size: 0.9rem;">Login / Sign Up</button>
+      <button class="btn btn--outline" id="navLogoutBtn" style="margin-left: 15px; padding: 6px 12px; font-size: 0.9rem; display: none;">Logout</button>
     </nav>
   </div>
 </header>
@@ -42,18 +47,20 @@
         <button class="btn btn--ghost" data-open="vetModal">I'm a veterinarian</button>
       </div>
     </div>
+    
+    <!-- NEW: 3D Floating Glass Card -->
     <div class="hero__art" aria-hidden="true">
-      <div class="tag-card">
+      <div class="glass-card floating">
         <div class="tag-card__row">
-          <span class="tag-card__qr">▦</span>
+          <span class="tag-card__qr" style="color: #F8B146; font-size: 2rem;">▦</span>
           <div>
-            <div class="tag-card__label">LUHID TAG</div>
-            <div class="tag-card__code">LUH-7F3K9Q</div>
+            <div class="tag-card__label" style="color: #A3C9B3;">LUHID TAG</div>
+            <div class="tag-card__code" style="font-size: 1.4rem; font-weight: 700; color: white;">LUH-7F3K9Q</div>
           </div>
         </div>
-        <div class="tag-card__divider"></div>
-        <div class="tag-card__meta">Cow · Gir · Ratlam, MP</div>
-        <div class="tag-card__meta tag-card__meta--muted">Scan for medical history or lost &amp; found</div>
+        <div class="tag-card__divider" style="background: rgba(255,255,255,0.2); margin: 20px 0; height: 1px;"></div>
+        <div class="tag-card__meta" style="color: white; font-weight: 500;">Cow · Gir · Ratlam, MP</div>
+        <div class="tag-card__meta tag-card__meta--muted" style="color: #A3C9B3; margin-top: 8px;">Scan for medical history or lost &amp; found</div>
       </div>
     </div>
   </div>
@@ -85,25 +92,21 @@
 <section class="portals" id="portals">
   <h2>Open a portal</h2>
   <div class="portals__grid">
-
     <button class="portal-card portal-card--farmer" data-open="registerModal">
       <span class="portal-card__icon">🌾</span>
       <h3>Farmer</h3>
       <p>Register an animal, get its QR tag, and log symptoms</p>
     </button>
-
     <button class="portal-card portal-card--vet" data-open="vetModal">
       <span class="portal-card__icon">🩺</span>
       <h3>Veterinarian</h3>
       <p>Look up an animal's full 30-second medical history</p>
     </button>
-
     <button class="portal-card portal-card--citizen" data-open="citizenModal">
       <span class="portal-card__icon">📍</span>
       <h3>Found an animal?</h3>
       <p>Alert the owner and share your location — no login needed</p>
     </button>
-
   </div>
 </section>
 
@@ -111,17 +114,34 @@
   <p>LUHID — Pashu Swasthya · Built for Smart India Hackathon 2026 · Offline-first · AI-guided · Privacy-preserving</p>
 </footer>
 
+<!-- ================= MODAL: LOGIN / SIGN UP ================= -->
+<div class="modal" id="loginModal" aria-hidden="true">
+  <div class="modal__panel" style="max-width: 400px; text-align: center;">
+    <button class="modal__close" data-close>&times;</button>
+    <h2 style="font-family: 'Fraunces', serif; color: var(--color-text);">Welcome to LUHID</h2>
+    <p class="muted">Login to securely manage your livestock.</p>
+
+    <form id="authForm" class="form-grid" style="margin-top: 20px;">
+      <input type="email" id="authEmail" placeholder="Enter your email" required style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ccc;">
+      <input type="password" id="authPassword" placeholder="Enter password" required style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ccc;">
+
+      <button type="button" id="signInBtn" class="btn btn--primary" style="width: 100%; margin-bottom: 10px;">Sign In</button>
+      <button type="button" id="signUpBtn" class="btn btn--ghost" style="width: 100%;">Create Account</button>
+      
+      <p id="authMessage" class="form-status" style="margin-top: 15px; font-weight: 500;"></p>
+    </form>
+  </div>
+</div>
+
 <!-- ================= MODAL: REGISTER + FARMER SYMPTOM LOGGER ================= -->
 <div class="modal" id="registerModal" aria-hidden="true">
   <div class="modal__panel modal__panel--wide">
     <button class="modal__close" data-close>&times;</button>
-
     <div class="tabs">
       <button class="tabs__btn is-active" data-tab="tab-register">1. Register animal</button>
       <button class="tabs__btn" data-tab="tab-log">2. Log symptoms</button>
       <button class="tabs__btn" data-tab="tab-tag">3. Tag &amp; sync</button>
     </div>
-
     <!-- Step 1: Register -->
     <div class="tab-panel is-active" id="tab-register">
       <h2>Register a new animal</h2>
@@ -175,11 +195,9 @@
     <div class="tab-panel" id="tab-log">
       <h2>Log symptoms</h2>
       <p class="muted">Works offline — entries queue locally and sync automatically once you're back online.</p>
-
       <label class="field-inline">Animal tag
         <input type="text" id="logTagCode" placeholder="LUH-XXXXXX" />
       </label>
-
       <div class="icon-grid" id="symptomIcons">
         <button type="button" class="icon-chip" data-symptom="Fever">🌡️ Fever</button>
         <button type="button" class="icon-chip" data-symptom="Not eating">🍽️ Not eating</button>
@@ -190,12 +208,10 @@
         <button type="button" class="icon-chip" data-symptom="Swelling">🔴 Swelling</button>
         <button type="button" class="icon-chip" data-symptom="Lethargy / weakness">😴 Weak / low energy</button>
       </div>
-
       <div class="voice-row">
         <textarea id="symptomText" rows="3" placeholder="Add details, or tap the mic to speak..."></textarea>
         <button type="button" class="mic-btn" id="micBtn" title="Speak your symptoms">🎙️</button>
       </div>
-
       <div class="form-grid">
         <label>Severity
           <select id="logSeverity">
@@ -216,12 +232,10 @@
           </select>
         </label>
       </div>
-
       <div class="form-actions">
         <span class="form-status" id="logStatus"></span>
         <button type="button" class="btn btn--primary" id="submitLogBtn">Get AI first-aid advice &amp; save</button>
       </div>
-
       <div class="advice-box" id="adviceBox" hidden>
         <h4>AI first-aid guidance</h4>
         <p id="adviceText"></p>
@@ -240,7 +254,6 @@
       <ul class="queue-list" id="queueList"></ul>
       <button type="button" class="btn btn--ghost" id="syncNowBtn">Sync now</button>
     </div>
-
   </div>
 </div>
 
@@ -250,14 +263,12 @@
     <button class="modal__close" data-close>&times;</button>
     <h2>Veterinarian — 30-second EHR</h2>
     <p class="muted">Scan the animal's QR tag or type the code printed on it.</p>
-
     <div class="lookup-row">
       <input type="text" id="vetTagInput" placeholder="LUH-XXXXXX" />
       <button type="button" class="btn btn--primary" id="vetLookupBtn">Look up</button>
       <button type="button" class="btn btn--ghost" id="vetScanBtn">📷 Scan QR</button>
     </div>
     <video id="vetScanVideo" class="scan-video" hidden playsinline></video>
-
     <div id="vetResult" class="ehr" hidden></div>
     <p class="form-status" id="vetStatus"></p>
   </div>
@@ -269,14 +280,12 @@
     <button class="modal__close" data-close>&times;</button>
     <h2>Found an animal?</h2>
     <p class="muted">Scan or enter the tag on its ear. We'll alert the owner without sharing your details or theirs.</p>
-
     <div class="lookup-row">
       <input type="text" id="citizenTagInput" placeholder="LUH-XXXXXX" />
       <button type="button" class="btn btn--primary" id="citizenLookupBtn">Find owner</button>
       <button type="button" class="btn btn--ghost" id="citizenScanBtn">📷 Scan QR</button>
     </div>
     <video id="citizenScanVideo" class="scan-video" hidden playsinline></video>
-
     <div id="citizenResult" class="citizen-card" hidden></div>
     <p class="form-status" id="citizenStatus"></p>
   </div>
@@ -289,5 +298,6 @@
 <script src="js/api.js"></script>
 <script src="js/db-local.js"></script>
 <script src="js/app.js"></script>
+<script src="js/auth.js"></script> <!-- New Auth Script -->
 </body>
 </html>
