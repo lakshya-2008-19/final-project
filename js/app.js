@@ -65,16 +65,33 @@ registerForm.addEventListener('submit', async (e) => {
 
   const fd = new FormData(registerForm);
   const payload = Object.fromEntries(fd.entries());
+  
+  // 🔴 NEW: Add userEmail if logged in, convert age to float, and parse species correctly
   if (payload.ageYears) payload.ageYears = parseFloat(payload.ageYears);
+  if (window.currentUserEmail) payload.userEmail = window.currentUserEmail;
+  
+  // Clean up species if it contains emoji (e.g., "🐄 Cow" -> "Cow")
+  if (payload.species && payload.species.includes(' ')) {
+      payload.species = payload.species.split(' ')[1]; 
+  }
 
   try {
     const result = await Api.createAnimal(payload);
     currentTagCode = result.TagCode;
     registerStatus.textContent = `Registered! Tag: ${result.TagCode}`;
+    registerStatus.style.color = "green";
+    
     document.getElementById('logTagCode').value = currentTagCode;
     await renderTagResult(currentTagCode, payload);
+    
+    // 🔴 NEW: Refresh the dynamic cards on the homepage right after registering
+    if (window.currentUserEmail && typeof loadUserAnimals === 'function') {
+        loadUserAnimals(window.currentUserEmail);
+    }
+    
     // jump to the tag tab automatically
     document.querySelector('[data-tab="tab-tag"]').click();
+    registerForm.reset(); // clear form for next time
   } catch (err) {
     registerStatus.textContent = err.message;
     registerStatus.classList.add('is-error');
@@ -86,7 +103,7 @@ async function renderTagResult(tagCode, animalInfo) {
   box.innerHTML = `
     <canvas id="qrCanvas"></canvas>
     <h3>${tagCode}</h3>
-    <p class="muted">${animalInfo.species || ''} ${animalInfo.breed ? '· ' + animalInfo.breed : ''}${animalInfo.village ? ' · ' + animalInfo.village : ''}</p>
+    <p class="muted">${animalInfo.animalName || ''} · ${animalInfo.species || ''} ${animalInfo.breed ? '· ' + animalInfo.breed : ''}</p>
     <p class="muted">Print this QR and fix it to a durable ear tag. Anyone scanning it can help reunite a lost animal; vets who scan it see the full medical history.</p>
   `;
   try {
@@ -108,7 +125,7 @@ document.querySelectorAll('.icon-chip').forEach((chip) => {
   });
 });
 
-// Voice input via Web Speech API (works on Chrome/Edge/Android; gracefully degrades elsewhere)
+// Voice input via Web Speech API
 const micBtn = document.getElementById('micBtn');
 const symptomText = document.getElementById('symptomText');
 let recognizer = null;
@@ -160,7 +177,8 @@ submitLogBtn.addEventListener('click', async () => {
   const freeText = symptomText.value.trim();
   const severity = document.getElementById('logSeverity').value;
   const language = document.getElementById('logLanguage').value;
-  const species = registerForm.species ? registerForm.species.value : '';
+  let species = registerForm.species ? registerForm.species.value : '';
+  if (species && species.includes(' ')) species = species.split(' ')[1]; // remove emoji
 
   const symptomsCombined = [...selectedSymptoms, freeText].filter(Boolean).join('; ');
 
@@ -189,7 +207,6 @@ submitLogBtn.addEventListener('click', async () => {
       await Api.addLog(tagCode, logPayload);
       setStatus(logStatus, 'Saved to the animal\'s health record.');
     } catch (err) {
-      // fall back to offline queue if the save itself failed
       LocalQueue.push({ tagCode, ...logPayload });
       setStatus(logStatus, 'Could not reach the server — saved locally and will sync automatically.', true);
     }
@@ -199,7 +216,6 @@ submitLogBtn.addEventListener('click', async () => {
   }
 
   renderQueue();
-  // reset the picker for the next entry
   selectedSymptoms.clear();
   document.querySelectorAll('.icon-chip.is-selected').forEach((c) => c.classList.remove('is-selected'));
   symptomText.value = '';
@@ -274,7 +290,7 @@ function renderVetResult(data) {
 
   vetResult.innerHTML = `
     <div class="ehr__header">
-      <h3>${a.Species}${a.Breed ? ' · ' + a.Breed : ''} — ${a.TagCode}</h3>
+      <h3>${a.AnimalName ? a.AnimalName + ' · ' : ''}${a.Species}${a.Breed ? ' · ' + a.Breed : ''} — ${a.TagCode}</h3>
       <p>Owner: ${escapeHtml(a.OwnerName)} · ${escapeHtml(a.OwnerPhone)} · ${escapeHtml(a.Village || '')}</p>
     </div>
     <div class="ehr__section"><h4>Symptom history</h4>${logsHtml}</div>
@@ -311,7 +327,7 @@ async function lookupCitizen(tagCode) {
 
 function renderCitizenResult(a) {
   citizenResult.innerHTML = `
-    <h3>${a.Species}${a.Breed ? ' · ' + a.Breed : ''}</h3>
+    <h3>${a.AnimalName ? a.AnimalName + ' · ' : ''}${a.Species}${a.Breed ? ' · ' + a.Breed : ''}</h3>
     <p class="muted">${a.Village ? a.Village + ', ' : ''}${a.District || ''}</p>
     <p>Owner: <strong>${escapeHtml(a.OwnerNameMasked)}</strong> · ${escapeHtml(a.OwnerPhoneMasked)}</p>
     <button type="button" class="btn btn--primary" id="alertOwnerBtn">📍 Alert owner with my location</button>
@@ -393,8 +409,8 @@ document.getElementById('citizenScanBtn').addEventListener('click', () => {
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
-// js/app.js (Breed Auto-select Logic)
 
+// js/app.js (Breed Auto-select Logic)
 const breedData = {
   "Cow": ["Gir", "Sahiwal", "Red Sindhi", "Tharparkar", "Holstein Friesian (HF)", "Jersey", "Mixed/Desi", "Other"],
   "Buffalo": ["Murrah", "Jafarabadi", "Surti", "Mehsana", "Nili Ravi", "Mixed/Desi", "Other"],
