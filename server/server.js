@@ -1,4 +1,4 @@
-// server.js (Compatible with @google/generative-ai "latest")
+// server.js (Permanent fix for undefined fields and dates)
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -103,18 +103,76 @@ app.get('/api/animals/:tagCode', async (req, res) => {
   try {
     const { tagCode } = req.params;
     const role = (req.query.role || 'public').toLowerCase();
-    const { data: animal, error: animalErr } = await supabase.from('animals').select('*').eq('tag_code', tagCode).single();
-    if (animalErr || !animal) return res.status(404).json({ error: 'No animal found for that tag.' });
-    if (role === 'vet') {
-      const { data: healthLogs } = await supabase.from('health_logs').select('*').eq('animal_id', animal.id).order('logged_at', { ascending: false });
-      const { data: vaccinations } = await supabase.from('vaccination_records').select('*').eq('animal_id', animal.id).order('given_on', { ascending: false });
-      return res.json({ role: 'vet', animal, healthLogs, vaccinations });
+
+    const { data: animal, error: animalErr } = await supabase
+      .from('animals')
+      .select('*')
+      .eq('tag_code', tagCode)
+      .single();
+
+    if (animalErr || !animal) {
+      return res.status(404).json({ error: 'No animal found for that tag.' });
     }
+
+    if (role === 'vet') {
+      const { data: healthLogs, error: logsErr } = await supabase
+        .from('health_logs')
+        .select('*')
+        .eq('animal_id', animal.id)
+        .order('logged_at', { ascending: false });
+      if (logsErr) throw logsErr;
+
+      const { data: vaccinations, error: vaxErr } = await supabase
+        .from('vaccination_records')
+        .select('*')
+        .eq('animal_id', animal.id)
+        .order('given_on', { ascending: false });
+      if (vaxErr) throw vaxErr;
+
+      return res.json({
+        role: 'vet',
+        animal: {
+          ...animal,
+          TagCode: animal.tag_code,
+          Species: animal.species,
+          Breed: animal.breed,
+          Sex: animal.sex,
+          AgeYears: animal.age_years,
+          OwnerName: animal.owner_name,
+          OwnerPhone: animal.owner_phone,
+          Village: animal.village,
+          District: animal.district,
+          Notes: animal.notes,
+          RegisteredAt: animal.registered_at
+        },
+        healthLogs: (healthLogs || []).map(l => ({
+          ...l,
+          Id: l.id,
+          Symptoms: l.symptoms,
+          Severity: l.severity,
+          Language: l.language,
+          AiAdvice: l.ai_advice,
+          Source: l.source,
+          LoggedAt: l.logged_at
+        })),
+        vaccinations: (vaccinations || []).map(v => ({
+          ...v,
+          Id: v.id,
+          VaccineName: v.vaccine_name,
+          GivenOn: v.given_on,
+          NextDueOn: v.next_due_on
+        }))
+      });
+    }
+
     res.json({
       role: 'public',
       animal: {
-        TagCode: animal.tag_code, Species: animal.species, Breed: animal.breed,
-        Village: animal.village, District: animal.district,
+        TagCode: animal.tag_code,
+        Species: animal.species,
+        Breed: animal.breed,
+        Village: animal.village,
+        District: animal.district,
         OwnerNameMasked: animal.owner_name ? animal.owner_name.split(' ')[0] + ' ••••' : 'Owner',
         OwnerPhoneMasked: maskPhone(animal.owner_phone)
       }
