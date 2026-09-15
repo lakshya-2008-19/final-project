@@ -144,31 +144,34 @@
     </div>
     <!-- Step 1: Register -->
     <div class="tab-panel is-active" id="tab-register">
-      <h2>Register a new animal</h2>
+      <h2 style="color: var(--color-text);">Register a new animal</h2>
       <form id="registerForm" class="form-grid">
+        
+        <!-- Species with Emojis -->
         <label>Species*
-          <select name="species" required>
-            <option value="Cow">Cow</option>
-            <option value="Buffalo">Buffalo</option>
-            <option value="Goat">Goat</option>
-            <option value="Sheep">Sheep</option>
-            <option value="Poultry">Poultry</option>
-            <option value="Other">Other</option>
+          <select name="species" id="speciesSelect" required>
+            <option value="">Select animal...</option>
+            <option value="Cow">🐄 Cow</option>
+            <option value="Buffalo">🐃 Buffalo</option>
+            <option value="Goat">🐐 Goat</option>
+            <option value="Sheep">🐏 Sheep</option>
+            <option value="Poultry">🐔 Poultry</option>
+            <option value="Other">🐾 Other</option>
           </select>
         </label>
+
+        <!-- Breed (Auto-populated based on Species) -->
         <label>Breed
-          <input type="text" name="breed" placeholder="e.g. Gir, Murrah" />
-        </label>
-        <label>Sex
-          <select name="sex">
-            <option value="">—</option>
-            <option value="Female">Female</option>
-            <option value="Male">Male</option>
+          <select name="breed" id="breedSelect">
+            <option value="">Select species first...</option>
           </select>
         </label>
+
+        <!-- Age (Years) -->
         <label>Age (years)
           <input type="number" step="0.5" min="0" name="ageYears" />
         </label>
+
         <label>Owner name*
           <input type="text" name="ownerName" required />
         </label>
@@ -184,13 +187,13 @@
         <label class="form-grid__full">Notes
           <textarea name="notes" rows="2" placeholder="Anything else worth noting"></textarea>
         </label>
+        
         <div class="form-grid__full form-actions">
           <span class="form-status" id="registerStatus"></span>
           <button type="submit" class="btn btn--primary">Register &amp; get QR tag</button>
         </div>
       </form>
     </div>
-
     <!-- Step 2: Log symptoms -->
     <div class="tab-panel" id="tab-log">
       <h2>Log symptoms</h2>
