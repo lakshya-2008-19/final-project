@@ -279,3 +279,21 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marigold); 
   50% { transform: rotateY(-15deg) rotateX(5deg) translateY(-20px); }
   100% { transform: rotateY(-15deg) rotateX(5deg) translateY(0px); }
 }
+/* style.css में जोड़ें या बदलें */
+body {
+  /* आपकी पसंद की गायों वाली इमेज का URL */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1596733430284-f743727040d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: white; /* टेक्स्ट का रंग सफेद करें ताकि डार्क बैकग्राउंड पर दिखे */
+}
+
+/* अगर आपका हेडर/नेवबार वाइट था, तो उसे ट्रांसपेरेंट या डार्क कर लें */
+.topbar {
+  background: rgba(0, 0, 0, 0.5); 
+  backdrop-filter: blur(10px);
+}
+.brand__text, .topnav a, h1, p {
+  color: white !important;
+}
