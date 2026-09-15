@@ -250,3 +250,32 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--marigold); 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+/* --- NEW COOL FLOATING CARD EFFECT --- */
+.hero__art { 
+  perspective: 1000px; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.glass-card {
+  background: #1B3627; /* Dark Forest Green */
+  color: white;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: -20px 20px 40px rgba(0,0,0,0.15);
+  transform: rotateY(-15deg) rotateX(5deg);
+  border: 1px solid rgba(255,255,255,0.1);
+  width: 100%;
+  max-width: 350px;
+}
+
+.floating { 
+  animation: float 6s ease-in-out infinite; 
+}
+
+@keyframes float {
+  0% { transform: rotateY(-15deg) rotateX(5deg) translateY(0px); }
+  50% { transform: rotateY(-15deg) rotateX(5deg) translateY(-20px); }
+  100% { transform: rotateY(-15deg) rotateX(5deg) translateY(0px); }
+}
