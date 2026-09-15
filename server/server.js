@@ -1,4 +1,4 @@
-// server.js (Permanent fix for undefined fields and dates, and removed 'sex' field)
+// server.js (Dynamic Cards Update, Removed 'sex', Added 'animalName' and 'userEmail')
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -74,13 +74,14 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, service: 'luhid-api', time: new Date().toISOString() });
 });
 
+// 🔴 UPDATED: /api/animals (Now saves animal_name and user_email)
 app.post('/api/animals', async (req, res) => {
   try {
-    // 🔴 REMOVED 'sex' from req.body 
-    const { species, breed, ageYears, ownerName, ownerPhone, village, district, notes } = req.body;
+    const { species, breed, animalName, userEmail, ageYears, ownerName, ownerPhone, village, district, notes } = req.body;
     
-    if (!species || !ownerName || !ownerPhone) {
-      return res.status(400).json({ error: 'species, ownerName and ownerPhone are required.' });
+    // Make sure basic details including animalName are provided
+    if (!species || !ownerName || !ownerPhone || !animalName) {
+      return res.status(400).json({ error: 'species, animalName, ownerName and ownerPhone are required.' });
     }
     
     let tagCode = generateTagCode();
@@ -92,9 +93,10 @@ app.post('/api/animals', async (req, res) => {
     
     const { data, error } = await supabase.from('animals').insert({
       tag_code: tagCode, 
+      animal_name: animalName, // User's custom animal name (e.g. Gauri)
+      user_email: userEmail,   // To tie the animal to the logged-in user
       species, 
       breed: breed || null, 
-      // 🔴 REMOVED 'sex' field insertion here
       age_years: ageYears || null, 
       owner_name: ownerName, 
       owner_phone: ownerPhone,
@@ -105,6 +107,24 @@ app.post('/api/animals', async (req, res) => {
     
     if (error) throw error;
     res.status(201).json({ Id: data.id, TagCode: data.tag_code, RegisteredAt: data.registered_at });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🔴 NEW ROUTE: Fetch all animals for a specific logged-in user
+app.get('/api/users/:email/animals', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { data, error } = await supabase
+      .from('animals')
+      .select('*')
+      .eq('user_email', email)
+      .order('registered_at', { ascending: false });
+
+    if (error) throw error;
+    res.json(data || []);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -146,10 +166,9 @@ app.get('/api/animals/:tagCode', async (req, res) => {
         animal: {
           ...animal,
           TagCode: animal.tag_code,
+          AnimalName: animal.animal_name,
           Species: animal.species,
           Breed: animal.breed,
-          // 🔴 'sex' might still come from the DB if old records have it, 
-          // but we won't show it for new ones.
           AgeYears: animal.age_years,
           OwnerName: animal.owner_name,
           OwnerPhone: animal.owner_phone,
@@ -182,6 +201,7 @@ app.get('/api/animals/:tagCode', async (req, res) => {
       role: 'public',
       animal: {
         TagCode: animal.tag_code,
+        AnimalName: animal.animal_name,
         Species: animal.species,
         Breed: animal.breed,
         Village: animal.village,
