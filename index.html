@@ -48,18 +48,19 @@
       </div>
     </div>
     
-    <!-- NEW: 3D Floating Glass Card -->
-    <div class="hero__art" aria-hidden="true">
-      <div class="glass-card floating">
+    <!-- NEW: 3D Floating Glass Card Container for Dynamic Cards -->
+    <div class="hero__art" aria-hidden="true" id="dynamicCardsContainer">
+      <!-- Default card (shows when user is not logged in) -->
+      <div class="glass-card floating" style="background: #1B3627;">
         <div class="tag-card__row">
           <span class="tag-card__qr" style="color: #F8B146; font-size: 2rem;">▦</span>
           <div>
             <div class="tag-card__label" style="color: #A3C9B3;">LUHID TAG</div>
-            <div class="tag-card__code" style="font-size: 1.4rem; font-weight: 700; color: white;">LUH-7F3K9Q</div>
+            <div class="tag-card__code" style="font-size: 1.4rem; font-weight: 700; color: white;">LUH-DEMO</div>
           </div>
         </div>
         <div class="tag-card__divider" style="background: rgba(255,255,255,0.2); margin: 20px 0; height: 1px;"></div>
-        <div class="tag-card__meta" style="color: white; font-weight: 500;">Cow · Gir · Ratlam, MP</div>
+        <div class="tag-card__meta" style="color: white; font-weight: 500;">Login to see your animals</div>
         <div class="tag-card__meta tag-card__meta--muted" style="color: #A3C9B3; margin-top: 8px;">Scan for medical history or lost &amp; found</div>
       </div>
     </div>
@@ -165,6 +166,11 @@
           <select name="breed" id="breedSelect">
             <option value="">Select species first...</option>
           </select>
+        </label>
+
+        <!-- NEW: Animal Name -->
+        <label class="form-grid__full">Animal's Name / Nickname*
+          <input type="text" name="animalName" id="regAnimalName" required placeholder="e.g. Gauri, Sheru" />
         </label>
 
         <!-- Age (Years) -->
