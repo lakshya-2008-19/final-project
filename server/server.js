@@ -1,4 +1,4 @@
-// server.js (Permanent Fix using official SDK with native systemInstruction)
+// server.js (Compatible with @google/generative-ai "latest")
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -18,6 +18,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 const GUARDRAIL_SYSTEM_PROMPT = `You are Pashu Sahayak, a pre-clinical livestock first-aid assistant used by rural farmers in India through the LUHID app. You are NOT a veterinarian and must never behave like one.
 
@@ -32,29 +33,27 @@ STRICT RULES (never break these):
 
 Respond as plain text only. Do not use markdown formatting.`;
 
-const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
-  systemInstruction: GUARDRAIL_SYSTEM_PROMPT
-});
-
 async function getTriageAdvice({ species, symptoms, language }) {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set.');
   }
 
-  const userPrompt = `Animal type: ${species || 'unspecified'}
+  const fullPrompt = `${GUARDRAIL_SYSTEM_PROMPT}
+
+---
+Animal type: ${species || 'unspecified'}
 Reported symptoms: ${symptoms}
 Preferred reply language: ${language || 'English'}
 
 Give safe pre-clinical first-aid guidance following your rules.`;
 
-  const response = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
     generationConfig: { temperature: 0.4, maxOutputTokens: 300 }
   });
 
-  const text = response.response.text();
-  return text || 'Unable to generate advice right now. Please isolate the animal, keep it comfortable, and contact a veterinarian.';
+  const text = result.response.text();
+  return text?.trim() || 'Unable to generate advice right now. Please isolate the animal, keep it comfortable, and contact a veterinarian.';
 }
 
 function generateTagCode() {
