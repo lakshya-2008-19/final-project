@@ -1,181 +1,187 @@
-// js/auth.js
+// server.js (Clean Backend Code - No 'window' errors)
+const express = require('express');
+const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// 1. Initialize Supabase
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co'; // अपना असली URL डालें
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';       // अपनी असली Key डालें
-const authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-// API URL
-const API_BASE_URL = 'https://pashu-swasthya.onrender.com';
+const PORT = process.env.PORT || 3000;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('Missing SUPABASE_URL or SUPABASE_KEY environment variables.');
+}
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. Elements
-const emailInput = document.getElementById("authEmail");
-const passwordInput = document.getElementById("authPassword");
-const signInBtn = document.getElementById("signInBtn");
-const signUpBtn = document.getElementById("signUpBtn");
-const authMessage = document.getElementById("authMessage");
-const navLoginBtn = document.getElementById("navLoginBtn");
-const navLogoutBtn = document.getElementById("navLogoutBtn");
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-// अलग-अलग जानवरों के लिए रंग
-const speciesColors = {
-    "Cow": "#2E5B41",      // Green
-    "Buffalo": "#2C3E50",  // Dark Navy
-    "Goat": "#8D6E63",     // Brown
-    "Sheep": "#607D8B",    // Blue Grey
-    "Poultry": "#E67E22",  // Orange
-    "Other": "#546E7A"
-};
+const GUARDRAIL_SYSTEM_PROMPT = `You are Pashu Sahayak, a pre-clinical livestock first-aid assistant used by rural farmers in India through the LUHID app. You are NOT a veterinarian and must never behave like one.
 
-// 🔴 UPDATED: जानवरों को लोड करके डिटेल वाला कार्ड बनाने का फंक्शन
-async function loadUserAnimals(userEmail) {
-    const container = document.getElementById('dynamicCardsContainer');
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/users/${userEmail}/animals`);
-        const animals = await response.json();
-        
-        if (animals.length > 0) {
-            container.innerHTML = ''; // डिफ़ॉल्ट कार्ड हटाएँ
-            
-            animals.forEach((animal, index) => {
-                const color = speciesColors[animal.species] || speciesColors["Other"];
-                const delay = index * 0.15;
-                
-                // Owner & Location Info
-                const ownerName = animal.owner_name || 'N/A';
-                const ownerPhone = animal.owner_phone || 'N/A';
-                const location = [animal.village, animal.district].filter(Boolean).join(', ') || 'Location N/A';
-                const regDate = new Date(animal.registered_at).toLocaleDateString();
-                
-                // Latest Symptoms Logic
-                let latestLogHTML = `<div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">✅ No symptoms logged yet. Animal is healthy!</div>`;
-                
-                if (animal.health_logs && animal.health_logs.length > 0) {
-                    animal.health_logs.sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at));
-                    const latestLog = animal.health_logs[0];
-                    const logDate = new Date(latestLog.logged_at).toLocaleDateString();
-                    
-                    latestLogHTML = `
-                        <div style="font-size: 0.75rem; color: #F8B146; text-transform: uppercase; margin-bottom: 3px; font-weight: bold;">⚠️ Latest Symptom (${logDate})</div>
-                        <div style="font-size: 0.9rem; line-height: 1.4;">${latestLog.symptoms}</div>
-                    `;
-                }
-                
-                // Card HTML
-                const cardHTML = `
-                <div class="glass-card floating" style="background: ${color}; cursor: pointer; animation-delay: ${delay}s; margin-bottom: 30px; padding: 25px; width: 100%; border: 1px solid rgba(255,255,255,0.2);" onclick="openLogForTag('${animal.tag_code}')">
-                    
-                    <div class="tag-card__row" style="margin-bottom: 15px;">
-                        <span class="tag-card__qr" style="color: #F8B146; font-size: 2.2rem;">▦</span>
-                        <div>
-                            <div class="tag-card__label" style="color: rgba(255,255,255,0.7);">LUHID TAG</div>
-                            <div class="tag-card__code" style="font-size: 1.5rem; font-weight: 700; color: white; letter-spacing: 1px;">${animal.tag_code}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
-                        <div>
-                            <div style="color: white; font-weight: 700; font-size: 1.5rem;">${animal.animal_name || 'No Name'}</div>
-                            <div style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 2px;">${animal.species} · ${animal.breed || 'Unknown'}</div>
-                        </div>
-                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: right;">
-                            Registered<br><strong>${regDate}</strong>
-                        </div>
-                    </div>
-                    
-                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.9); line-height: 1.6; margin-bottom: 15px;">
-                        👤 <strong>${ownerName}</strong> 📞 ${ownerPhone}<br>
-                        📍 ${location}
-                    </div>
-                    
-                    <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #F8B146;">
-                        ${latestLogHTML}
-                    </div>
-                    
-                    <div style="text-align: center; font-size: 0.85rem; font-weight: bold; background: rgba(255,255,255,0.15); padding: 8px 12px; border-radius: 20px; transition: background 0.3s;">
-                        + Tap to log new symptoms
-                    </div>
-                </div>`;
-                
-                container.innerHTML += cardHTML;
-            });
-        }
-    } catch (err) {
-        console.error("Error fetching animals:", err);
-    }
+STRICT RULES (never break these):
+1. Never name, dose, or recommend any specific medicine, antibiotic, vaccine, or injectable drug.
+2. Never diagnose a specific disease with certainty. You may mention 2-3 possibilities in plain language.
+3. Always give safe, general first-aid and isolation/husbandry steps only.
+4. Always end by clearly telling the farmer to contact a qualified veterinarian.
+5. If symptoms sound severe or life-threatening, say this is an EMERGENCY.
+6. Keep the answer short: 4-6 sentences.
+7. Respond in the same language the farmer used.
+
+Respond as plain text only. Do not use markdown formatting.`;
+
+async function getTriageAdvice({ species, symptoms, language }) {
+  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is not set.');
+
+  const fullPrompt = `${GUARDRAIL_SYSTEM_PROMPT}\n---\nAnimal type: ${species || 'unspecified'}\nReported symptoms: ${symptoms}\nPreferred reply language: ${language || 'English'}\n\nGive safe pre-clinical first-aid guidance following your rules.`;
+
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+    generationConfig: { temperature: 0.4, maxOutputTokens: 300 }
+  });
+
+  const text = result.response.text();
+  return text?.trim() || 'Unable to generate advice right now. Please isolate the animal, keep it comfortable, and contact a veterinarian.';
 }
 
-window.openLogForTag = function(tagCode) {
-    document.getElementById('registerModal').classList.add('is-open');
-    document.querySelector('[data-tab="tab-log"]').click();
-    document.getElementById('logTagCode').value = tagCode;
-};
-
-// 3. Check if user is already logged in
-async function checkUser() {
-    const { data: { user } } = await authClient.auth.getUser();
-    if (user) {
-        navLoginBtn.style.display = "none";
-        navLogoutBtn.style.display = "inline-block";
-        navLogoutBtn.textContent = `Logout (${user.email.split('@')[0]})`;
-        
-        window.currentUserEmail = user.email; 
-        loadUserAnimals(user.email); // 🔴 Call load animals here
-    } else {
-        navLoginBtn.style.display = "inline-block";
-        navLogoutBtn.style.display = "none";
-    }
+function generateTagCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'LUH-';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
 }
-checkUser();
 
-// 4. Sign Up
-signUpBtn.addEventListener("click", async () => {
-    authMessage.textContent = "Creating account...";
-    authMessage.style.color = "var(--color-primary)";
+function maskPhone(phone) {
+  if (!phone) return null;
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.length < 4) return '••••';
+  return '••••••' + digits.slice(-4);
+}
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'luhid-api', time: new Date().toISOString() });
+});
+
+app.post('/api/animals', async (req, res) => {
+  try {
+    const { species, breed, animalName, userEmail, ageYears, ownerName, ownerPhone, village, district, notes } = req.body;
     
-    const { data, error } = await authClient.auth.signUp({
-        email: emailInput.value,
-        password: passwordInput.value,
-    });
-
-    if (error) {
-        authMessage.textContent = error.message;
-        authMessage.style.color = "red";
-    } else {
-        authMessage.textContent = "Success! Account created.";
-        authMessage.style.color = "green";
+    if (!species || !ownerName || !ownerPhone || !animalName) {
+      return res.status(400).json({ error: 'species, animalName, ownerName and ownerPhone are required.' });
     }
+    
+    let tagCode = generateTagCode();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data: existing } = await supabase.from('animals').select('id').eq('tag_code', tagCode);
+      if (!existing || existing.length === 0) break;
+      tagCode = generateTagCode();
+    }
+    
+    const { data, error } = await supabase.from('animals').insert({
+      tag_code: tagCode, 
+      animal_name: animalName, 
+      user_email: userEmail,   
+      species, 
+      breed: breed || null, 
+      age_years: ageYears || null, 
+      owner_name: ownerName, 
+      owner_phone: ownerPhone,
+      village: village || null, 
+      district: district || null, 
+      notes: notes || null
+    }).select('id, tag_code, registered_at').single();
+    
+    if (error) throw error;
+    res.status(201).json({ Id: data.id, TagCode: data.tag_code, RegisteredAt: data.registered_at });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 5. Sign In
-signInBtn.addEventListener("click", async () => {
-    authMessage.textContent = "Signing in...";
-    authMessage.style.color = "var(--color-primary)";
+app.get('/api/users/:email/animals', async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { data, error } = await supabase
+      .from('animals')
+      .select('*, health_logs(symptoms, logged_at)')
+      .eq('user_email', email)
+      .order('registered_at', { ascending: false });
 
-    const { data, error } = await authClient.auth.signInWithPassword({
-        email: emailInput.value,
-        password: passwordInput.value,
-    });
-
-    if (error) {
-        authMessage.textContent = error.message;
-        authMessage.style.color = "red";
-    } else {
-        authMessage.textContent = "Login Successful!";
-        authMessage.style.color = "green";
-        checkUser();
-        setTimeout(() => {
-            document.getElementById("loginModal").classList.remove("is-open");
-            emailInput.value = '';
-            passwordInput.value = '';
-            authMessage.textContent = '';
-        }, 1000);
-    }
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 6. Sign Out
-navLogoutBtn.addEventListener("click", async () => {
-    await authClient.auth.signOut();
-    window.location.reload(); // 🔴 Reload page on logout to clear cards
+app.get('/api/animals/:tagCode', async (req, res) => {
+  try {
+    const { tagCode } = req.params;
+    const role = (req.query.role || 'public').toLowerCase();
+
+    const { data: animal, error: animalErr } = await supabase.from('animals').select('*').eq('tag_code', tagCode).single();
+    if (animalErr || !animal) {
+      return res.status(404).json({ error: 'No animal found for that tag.' });
+    }
+
+    if (role === 'vet') {
+      const { data: healthLogs } = await supabase.from('health_logs').select('*').eq('animal_id', animal.id).order('logged_at', { ascending: false });
+      const { data: vaccinations } = await supabase.from('vaccination_records').select('*').eq('animal_id', animal.id).order('given_on', { ascending: false });
+
+      return res.json({
+        role: 'vet',
+        animal: { ...animal, TagCode: animal.tag_code, AnimalName: animal.animal_name, Species: animal.species, Breed: animal.breed, AgeYears: animal.age_years, OwnerName: animal.owner_name, OwnerPhone: animal.owner_phone, Village: animal.village, District: animal.district, Notes: animal.notes, RegisteredAt: animal.registered_at },
+        healthLogs: (healthLogs || []).map(l => ({ ...l, Id: l.id, Symptoms: l.symptoms, Severity: l.severity, Language: l.language, AiAdvice: l.ai_advice, Source: l.source, LoggedAt: l.logged_at })),
+        vaccinations: (vaccinations || []).map(v => ({ ...v, Id: v.id, VaccineName: v.vaccine_name, GivenOn: v.given_on, NextDueOn: v.next_due_on }))
+      });
+    }
+
+    res.json({
+      role: 'public',
+      animal: { TagCode: animal.tag_code, AnimalName: animal.animal_name, Species: animal.species, Breed: animal.breed, Village: animal.village, District: animal.district, OwnerNameMasked: animal.owner_name ? animal.owner_name.split(' ')[0] + ' ••••' : 'Owner', OwnerPhoneMasked: maskPhone(animal.owner_phone) }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/animals/:tagCode/logs', async (req, res) => {
+  try {
+    const { tagCode } = req.params;
+    const { symptoms, severity, language, aiAdvice, source } = req.body;
+    if (!symptoms) return res.status(400).json({ error: 'symptoms is required.' });
+    const { data: animal, error: animalErr } = await supabase.from('animals').select('id').eq('tag_code', tagCode).single();
+    if (animalErr || !animal) return res.status(404).json({ error: 'No animal found for that tag.' });
+    const { data, error } = await supabase.from('health_logs').insert({
+      animal_id: animal.id, symptoms, severity: severity || null, language: language || null,
+      ai_advice: aiAdvice || null, source: source || 'online'
+    }).select('id, logged_at').single();
+    if (error) throw error;
+    res.status(201).json({ Id: data.id, LoggedAt: data.logged_at });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/triage', async (req, res) => {
+  try {
+    const { species, symptoms, language } = req.body;
+    if (!symptoms) return res.status(400).json({ error: 'symptoms is required.' });
+    const advice = await getTriageAdvice({ species, symptoms, language });
+    res.json({ advice });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log('LUHID API listening on port ' + PORT);
 });
