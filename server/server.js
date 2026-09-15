@@ -1,4 +1,4 @@
-// server.js (Permanent fix for undefined fields and dates)
+// server.js (Permanent fix for undefined fields and dates, and removed 'sex' field)
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
@@ -76,21 +76,33 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/animals', async (req, res) => {
   try {
-    const { species, breed, sex, ageYears, ownerName, ownerPhone, village, district, notes } = req.body;
+    // 🔴 REMOVED 'sex' from req.body 
+    const { species, breed, ageYears, ownerName, ownerPhone, village, district, notes } = req.body;
+    
     if (!species || !ownerName || !ownerPhone) {
       return res.status(400).json({ error: 'species, ownerName and ownerPhone are required.' });
     }
+    
     let tagCode = generateTagCode();
     for (let attempt = 0; attempt < 5; attempt++) {
       const { data: existing } = await supabase.from('animals').select('id').eq('tag_code', tagCode);
       if (!existing || existing.length === 0) break;
       tagCode = generateTagCode();
     }
+    
     const { data, error } = await supabase.from('animals').insert({
-      tag_code: tagCode, species, breed: breed || null, sex: sex || null,
-      age_years: ageYears || null, owner_name: ownerName, owner_phone: ownerPhone,
-      village: village || null, district: district || null, notes: notes || null
+      tag_code: tagCode, 
+      species, 
+      breed: breed || null, 
+      // 🔴 REMOVED 'sex' field insertion here
+      age_years: ageYears || null, 
+      owner_name: ownerName, 
+      owner_phone: ownerPhone,
+      village: village || null, 
+      district: district || null, 
+      notes: notes || null
     }).select('id, tag_code, registered_at').single();
+    
     if (error) throw error;
     res.status(201).json({ Id: data.id, TagCode: data.tag_code, RegisteredAt: data.registered_at });
   } catch (err) {
@@ -136,7 +148,8 @@ app.get('/api/animals/:tagCode', async (req, res) => {
           TagCode: animal.tag_code,
           Species: animal.species,
           Breed: animal.breed,
-          Sex: animal.sex,
+          // 🔴 'sex' might still come from the DB if old records have it, 
+          // but we won't show it for new ones.
           AgeYears: animal.age_years,
           OwnerName: animal.owner_name,
           OwnerPhone: animal.owner_phone,
